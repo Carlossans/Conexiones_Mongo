@@ -11,5 +11,5 @@ load_dotenv() #Basicamente abre el fichero .env y lee el contenido, cargando las
 MONGO_URI= os.getenv("MONGO_URI") #Aquí se utiliza os.getenv() para obtener el valor de la variable "MONGO_URI"
 client = MongoClient(MONGO_URI, tlsCAFile=ca)#Crea unna instancia de MongoClient y se la asigna a la variable "client"
 
-for db in client.list_database_names(): #Recorre la lista de nombres de las bases de datos que tenemos en el cluster
-    print(db) #Imprime el nombre de cada base de datos.
+for collection in client.list_database_names(): #Recorre la lista de nombres de las bases de datos que tenemos en el cluster
+    print(collection) #Imprime el nombre de cada base de datos.
