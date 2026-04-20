@@ -1,0 +1,26 @@
+###
+POST http://localhost:5000/todo HTTP/1.1
+Content-Type: application/json
+
+{
+    "title": "Learn MongoDB",
+    "description": "Learn MongoDB and the official driver"
+}
+
+###
+GET http://localhost:5000/todo HTTP/1.1
+
+###
+GET http://localhost:5000/todo/64ec26c1a93ecbdcc0743d9a HTTP/1.1
+
+###
+PUT http://localhost:5000/todo/64ec23158893c4d201a64a89 HTTP/1.1
+Content-Type: application/json
+
+{
+    "title": "Learn Python and Flask",
+    "done": true
+}
+
+###
+DELETE http://localhost:5000/todo/64ec23158893c4d201a64a89 HTTP/1.1
