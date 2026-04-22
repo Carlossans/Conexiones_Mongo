@@ -1,4 +1,4 @@
-### con wedu y añadir ip al mongo atlas
+### CON WEDU NO SE PUEDE HACER | USAR OTRA RED O USAR DATOS y añadir esta ip al mongo atlas: 0.0.0.0 que permite entrar a todo el mundo MENOS A LA RED WEDU POR SER UNA RED DE INSTITUCIÓN PÚBLICA, lo ideal es poner tu ip PÚBLICA ACTUAL, si no sabes cual es tu ip pública puedes buscar en google "¿Cuál es mi ip publica?" y te lo dice en cualquier enlace que te aparece y listo o si no a la hora de acceder al "IP ACCES LIST" aparece un botón que dice "ADD CURRENT IP ADDRESS" y le das click y listo.
 POST http://localhost:5000/todo HTTP/1.1
 Content-Type: application/json
 
