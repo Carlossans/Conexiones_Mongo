@@ -1,13 +1,974 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="es">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Document</title>
+  <title>Todo API - Flask + MongoDB</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    ::-webkit-scrollbar {
+      width: 10px;
+    }
+
+    ::-webkit-scrollbar-track {
+      background: rgba(0, 0, 0, 0.3);
+      border-radius: 10px;
+    }
+
+    ::-webkit-scrollbar-thumb {
+      background: linear-gradient(180deg, #7b2fff, #5b21b6);
+      border-radius: 10px;
+      border: 2px solid rgba(0, 0, 0, 0.3);
+    }
+
+    ::-webkit-scrollbar-thumb:hover {
+      background: linear-gradient(180deg, #8b5cf6, #6d28d9);
+    }
+
+    body {
+      font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      background:
+        radial-gradient(ellipse at top, rgba(123, 47, 255, 0.15) 0%, transparent 50%),
+        radial-gradient(ellipse at bottom, rgba(0, 217, 255, 0.1) 0%, transparent 50%),
+        linear-gradient(180deg, #0d0d1a 0%, #0a0a14 100%);
+      min-height: 100vh;
+      padding: 40px 20px;
+    }
+
+    .container {
+      max-width: 900px;
+      margin: 0 auto;
+      position: relative;
+      z-index: 1;
+    }
+
+    h1 {
+      text-align: center;
+      background: linear-gradient(135deg, #00d9ff 0%, #7b2fff 50%, #00d9ff 100%);
+      background-size: 200% auto;
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+      margin-bottom: 50px;
+      font-size: 2.8rem;
+      font-weight: 700;
+      letter-spacing: -0.5px;
+      animation: shimmer 3s linear infinite;
+      filter: drop-shadow(0 0 40px rgba(123, 47, 255, 0.3));
+    }
+
+    @keyframes shimmer {
+      to { background-position: 200% center; }
+    }
+
+    .form-container {
+      background: linear-gradient(145deg, rgba(255, 255, 255, 0.05) 0%, rgba(255, 255, 255, 0.02) 100%);
+      backdrop-filter: blur(30px) saturate(180%);
+      border-radius: 24px;
+      padding: 32px;
+      margin-bottom: 24px;
+      border: 1px solid rgba(255, 255, 255, 0.06);
+      box-shadow:
+        0 8px 32px rgba(0, 0, 0, 0.4),
+        inset 0 1px 0 rgba(255, 255, 255, 0.06),
+        inset 0 0 0 1px rgba(255, 255, 255, 0.02);
+      transition: all 0.3s ease;
+    }
+
+    .form-container:hover {
+      border-color: rgba(123, 47, 255, 0.2);
+      box-shadow:
+        0 12px 48px rgba(0, 0, 0, 0.5),
+        inset 0 1px 0 rgba(255, 255, 255, 0.08),
+        0 0 60px rgba(123, 47, 255, 0.1);
+    }
+
+    .form-container h2 {
+      background: linear-gradient(135deg, #00d9ff 0%, #7b2fff 100%);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+      margin-bottom: 25px;
+      font-size: 1.25rem;
+      font-weight: 700;
+      letter-spacing: 0.5px;
+      padding-bottom: 15px;
+      border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+    }
+
+    .form-group {
+      margin-bottom: 15px;
+    }
+
+    .form-group label {
+      display: block;
+      color: #a5b4fc;
+      margin-bottom: 8px;
+      font-weight: 600;
+      font-size: 0.85rem;
+      letter-spacing: 0.5px;
+      text-transform: uppercase;
+    }
+
+    .form-group input,
+    .form-group textarea {
+      width: 100%;
+      padding: 14px 16px;
+      border: 1px solid rgba(255, 255, 255, 0.08);
+      border-radius: 12px;
+      background: rgba(0, 0, 0, 0.4);
+      color: #fff;
+      font-size: 1rem;
+      transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+
+    .form-group input:focus,
+    .form-group textarea:focus {
+      outline: none;
+      border-color: #7b2fff;
+      box-shadow:
+        0 0 0 3px rgba(123, 47, 255, 0.15),
+        0 4px 20px rgba(123, 47, 255, 0.2);
+      background: rgba(0, 0, 0, 0.5);
+    }
+
+    .form-group input::placeholder,
+    .form-group textarea::placeholder {
+      color: rgba(255, 255, 255, 0.3);
+    }
+
+    .form-group input::placeholder,
+    .form-group textarea::placeholder {
+      color: rgba(255, 255, 255, 0.4);
+    }
+
+    .form-group textarea {
+      resize: vertical;
+      min-height: 80px;
+    }
+
+    .btn {
+      padding: 12px 24px;
+      border: none;
+      border-radius: 12px;
+      cursor: pointer;
+      font-size: 0.95rem;
+      font-weight: 600;
+      transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      letter-spacing: 0.3px;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .btn::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: -100%;
+      width: 100%;
+      height: 100%;
+      background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.2), transparent);
+      transition: left 0.5s ease;
+    }
+
+    .btn:hover::before {
+      left: 100%;
+    }
+
+    .btn:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 8px 25px rgba(0, 0, 0, 0.3);
+    }
+
+    .btn:active {
+      transform: translateY(0);
+    }
+
+    .btn-primary {
+      background: linear-gradient(135deg, #00d9ff 0%, #0099ff 100%);
+      color: #0a0a14;
+      box-shadow: 0 4px 15px rgba(0, 217, 255, 0.35);
+    }
+
+    .btn-primary:hover {
+      box-shadow: 0 8px 30px rgba(0, 217, 255, 0.5);
+    }
+
+    .btn-success {
+      background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+      color: #fff;
+      box-shadow: 0 4px 15px rgba(16, 185, 129, 0.35);
+    }
+
+    .btn-success:hover {
+      box-shadow: 0 8px 30px rgba(16, 185, 129, 0.5);
+    }
+
+    .btn-danger {
+      background: linear-gradient(135deg, #ff6b6b 0%, #dc2626 100%);
+      color: #fff;
+      box-shadow: 0 4px 15px rgba(255, 107, 107, 0.35);
+    }
+
+    .btn-danger:hover {
+      box-shadow: 0 8px 30px rgba(255, 107, 107, 0.5);
+    }
+
+    .btn-secondary {
+      background: rgba(255, 255, 255, 0.08);
+      color: #fff;
+      border: 1px solid rgba(255, 255, 255, 0.12);
+      backdrop-filter: blur(10px);
+    }
+
+    .btn-secondary:hover {
+      background: rgba(255, 255, 255, 0.12);
+      border-color: rgba(123, 47, 255, 0.3);
+      box-shadow: 0 6px 25px rgba(123, 47, 255, 0.2);
+    }
+
+    .btn-small {
+      padding: 8px 16px;
+      font-size: 0.85rem;
+      border-radius: 10px;
+    }
+
+    .btn:disabled {
+      opacity: 0.5;
+      cursor: not-allowed;
+      transform: none;
+    }
+
+    .todos-container {
+      display: grid;
+      gap: 16px;
+    }
+
+    .todo-card {
+      background: linear-gradient(145deg, rgba(255, 255, 255, 0.04) 0%, rgba(255, 255, 255, 0.01) 100%);
+      backdrop-filter: blur(30px) saturate(180%);
+      border-radius: 20px;
+      padding: 28px;
+      border: 1px solid rgba(255, 255, 255, 0.06);
+      box-shadow:
+        0 4px 24px rgba(0, 0, 0, 0.3),
+        inset 0 1px 0 rgba(255, 255, 255, 0.04);
+      transition: all 0.35s cubic-bezier(0.4, 0, 0.2, 1);
+      position: relative;
+      overflow: hidden;
+    }
+
+    .todo-card::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      height: 3px;
+      background: linear-gradient(90deg, #00d9ff, #7b2fff, #00d9ff);
+      background-size: 200% 100%;
+      opacity: 0;
+      transition: opacity 0.35s ease;
+    }
+
+    .todo-card::after {
+      content: '';
+      position: absolute;
+      inset: 0;
+      background: radial-gradient(ellipse at center, rgba(123, 47, 255, 0.08) 0%, transparent 70%);
+      opacity: 0;
+      transition: opacity 0.35s ease;
+    }
+
+    .todo-card:hover {
+      transform: translateY(-4px) scale(1.01);
+      border-color: rgba(123, 47, 255, 0.35);
+      box-shadow:
+        0 12px 40px rgba(0, 0, 0, 0.4),
+        0 0 40px rgba(123, 47, 255, 0.15),
+        inset 0 1px 0 rgba(255, 255, 255, 0.08);
+    }
+
+    .todo-card:hover::before {
+      opacity: 1;
+      animation: shimmer-border 2s linear infinite;
+    }
+
+    .todo-card:hover::after {
+      opacity: 1;
+    }
+
+    @keyframes shimmer-border {
+      to { background-position: 200% center; }
+    }
+
+    .todo-card.done {
+      opacity: 0.6;
+      background: linear-gradient(145deg, rgba(16, 185, 129, 0.06) 0%, rgba(0, 0, 0, 0.15) 100%);
+      border-color: rgba(16, 185, 129, 0.2);
+    }
+
+    .todo-card.done:hover {
+      border-color: rgba(16, 185, 129, 0.4);
+    }
+
+    .todo-card.done .todo-title {
+      text-decoration: line-through;
+      color: #6b7280;
+    }
+
+    .todo-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+      margin-bottom: 12px;
+    }
+
+    .todo-title-wrapper {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      flex: 1;
+    }
+
+    .todo-title {
+      color: #fff;
+      font-size: 1.15rem;
+      font-weight: 600;
+      letter-spacing: -0.2px;
+    }
+
+    .todo-id {
+      color: #00d9ff;
+      font-size: 0.65rem;
+      font-family: 'JetBrains Mono', 'Fira Code', monospace;
+      background: linear-gradient(135deg, rgba(0, 217, 255, 0.15), rgba(123, 47, 255, 0.15));
+      padding: 4px 10px;
+      border-radius: 8px;
+      border: 1px solid rgba(0, 217, 255, 0.25);
+      letter-spacing: 0.5px;
+    }
+
+    .todo-description {
+      color: #9ca3af;
+      margin-bottom: 16px;
+      line-height: 1.6;
+      font-size: 0.95rem;
+    }
+
+    .todo-meta {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      margin-bottom: 16px;
+    }
+
+    .todo-status {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 5px 12px;
+      border-radius: 20px;
+      font-size: 0.75rem;
+      font-weight: 600;
+      letter-spacing: 0.3px;
+      text-transform: uppercase;
+    }
+
+    .status-pending {
+      background: linear-gradient(135deg, rgba(251, 191, 36, 0.15), rgba(245, 158, 11, 0.1));
+      color: #fbbf24;
+      border: 1px solid rgba(251, 191, 36, 0.35);
+      box-shadow: 0 2px 10px rgba(251, 191, 36, 0.15);
+    }
+
+    .status-pending::before {
+      content: '';
+      width: 6px;
+      height: 6px;
+      border-radius: 50%;
+      background: #fbbf24;
+      animation: pulse 2s infinite;
+      box-shadow: 0 0 10px #fbbf24;
+    }
+
+    .status-done {
+      background: linear-gradient(135deg, rgba(16, 185, 129, 0.15), rgba(5, 150, 105, 0.1));
+      color: #34d399;
+      border: 1px solid rgba(16, 185, 129, 0.35);
+      box-shadow: 0 2px 10px rgba(16, 185, 129, 0.15);
+    }
+
+    .status-done::before {
+      content: '✓';
+      font-size: 11px;
+      font-weight: 900;
+      text-shadow: 0 0 10px rgba(16, 185, 129, 0.5);
+    }
+
+    @keyframes pulse {
+      0%, 100% { opacity: 1; transform: scale(1); }
+      50% { opacity: 0.6; transform: scale(0.85); }
+    }
+
+    .todo-actions {
+      display: flex;
+      gap: 8px;
+      flex-wrap: wrap;
+    }
+
+    .empty-state {
+      text-align: center;
+      padding: 80px 20px;
+      color: #6b7280;
+      background: linear-gradient(145deg, rgba(255, 255, 255, 0.02) 0%, rgba(255, 255, 255, 0.01) 100%);
+      border-radius: 20px;
+      border: 1px dashed rgba(123, 47, 255, 0.2);
+    }
+
+    .empty-state svg {
+      width: 80px;
+      height: 80px;
+      margin-bottom: 24px;
+      opacity: 0.4;
+      filter: drop-shadow(0 0 20px rgba(123, 47, 255, 0.3));
+    }
+
+    .empty-state p {
+      font-size: 1.1rem;
+      margin-bottom: 8px;
+    }
+
+    .empty-state p:last-child {
+      font-size: 0.95rem;
+      opacity: 0.7;
+    }
+
+    .loading {
+      text-align: center;
+      padding: 60px 20px;
+      color: #a5b4fc;
+      background: linear-gradient(145deg, rgba(255, 255, 255, 0.02) 0%, rgba(255, 255, 255, 0.01) 100%);
+      border-radius: 20px;
+      border: 1px solid rgba(123, 47, 255, 0.1);
+    }
+
+    .loading p {
+      font-weight: 500;
+      letter-spacing: 0.5px;
+    }
+
+    .spinner {
+      width: 48px;
+      height: 48px;
+      border: 3px solid rgba(123, 47, 255, 0.15);
+      border-top-color: #00d9ff;
+      border-right-color: #7b2fff;
+      border-radius: 50%;
+      animation: spin 0.8s linear infinite;
+      margin: 0 auto 20px;
+      box-shadow: 0 0 30px rgba(123, 47, 255, 0.2);
+    }
+
+    @keyframes spin {
+      to { transform: rotate(360deg); }
+    }
+
+    .notification {
+      position: fixed;
+      top: 24px;
+      right: 24px;
+      padding: 16px 28px;
+      border-radius: 16px;
+      color: #fff;
+      font-weight: 600;
+      font-size: 0.95rem;
+      transform: translateX(400px);
+      transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+      z-index: 1000;
+      box-shadow:
+        0 10px 40px rgba(0, 0, 0, 0.4),
+        0 0 0 1px rgba(255, 255, 255, 0.1);
+      backdrop-filter: blur(20px);
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+
+    .notification::before {
+      content: '';
+      width: 20px;
+      height: 20px;
+      border-radius: 50%;
+      flex-shrink: 0;
+    }
+
+    .notification.show {
+      transform: translateX(0);
+    }
+
+    .notification.success {
+      background: linear-gradient(135deg, rgba(16, 185, 129, 0.9) 0%, rgba(5, 150, 105, 0.9) 100%);
+      border: 1px solid rgba(16, 185, 129, 0.4);
+    }
+
+    .notification.success::before {
+      background: linear-gradient(135deg, #34d399, #10b981);
+      box-shadow: 0 0 20px rgba(16, 185, 129, 0.6);
+    }
+
+    .notification.error {
+      background: linear-gradient(135deg, rgba(239, 68, 68, 0.9) 0%, rgba(185, 28, 28, 0.9) 100%);
+      border: 1px solid rgba(239, 68, 68, 0.4);
+    }
+
+    .notification.error::before {
+      background: linear-gradient(135deg, #f87171, #ef4444);
+      box-shadow: 0 0 20px rgba(239, 68, 68, 0.6);
+    }
+
+    .modal-overlay {
+      position: fixed;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background: rgba(0, 0, 0, 0.8);
+      backdrop-filter: blur(8px) saturate(120%);
+      display: none;
+      justify-content: center;
+      align-items: center;
+      z-index: 999;
+      opacity: 0;
+      transition: opacity 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+
+    .modal-overlay.active {
+      display: flex;
+      opacity: 1;
+    }
+
+    .modal {
+      background: linear-gradient(145deg, rgba(26, 26, 46, 0.95) 0%, rgba(15, 15, 26, 0.95) 100%);
+      border-radius: 24px;
+      padding: 36px;
+      max-width: 500px;
+      width: 90%;
+      border: 1px solid rgba(123, 47, 255, 0.35);
+      box-shadow:
+        0 25px 80px rgba(0, 0, 0, 0.6),
+        0 0 60px rgba(123, 47, 255, 0.15),
+        inset 0 1px 0 rgba(255, 255, 255, 0.1);
+      backdrop-filter: blur(30px);
+      transform: scale(0.92);
+      transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+
+    .modal-overlay.active .modal {
+      transform: scale(1);
+    }
+
+    .modal h2 {
+      background: linear-gradient(135deg, #00d9ff 0%, #7b2fff 100%);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+      margin-bottom: 25px;
+      font-size: 1.5rem;
+      font-weight: 700;
+    }
+
+    .modal-actions {
+      display: flex;
+      gap: 10px;
+      justify-content: flex-end;
+      margin-top: 25px;
+      padding-top: 20px;
+      border-top: 1px solid rgba(255, 255, 255, 0.1);
+    }
+
+    .refresh-btn {
+      position: fixed;
+      bottom: 32px;
+      right: 32px;
+      width: 60px;
+      height: 60px;
+      border-radius: 50%;
+      background: linear-gradient(135deg, #7b2fff 0%, #5b21b6 100%);
+      border: 2px solid rgba(255, 255, 255, 0.1);
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      box-shadow:
+        0 8px 30px rgba(123, 47, 255, 0.5),
+        0 0 40px rgba(123, 47, 255, 0.2);
+      transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+      z-index: 100;
+    }
+
+    .refresh-btn:hover {
+      transform: scale(1.15) rotate(90deg);
+      box-shadow:
+        0 15px 50px rgba(123, 47, 255, 0.6),
+        0 0 60px rgba(123, 47, 255, 0.3);
+      border-color: rgba(255, 255, 255, 0.2);
+    }
+
+    .refresh-btn:active {
+      transform: scale(1.08) rotate(90deg);
+    }
+
+    .refresh-btn svg {
+      width: 26px;
+      height: 26px;
+      fill: #fff;
+      transition: transform 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+      filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.3));
+    }
+  </style>
 </head>
 <body>
-  <h1 style="color: green">
-    Welcome to my API with python and flask!
-  </h1>
+  <div class="container">
+    <h1>Todo API Manager</h1>
+
+    <div class="form-container">
+      <h2>Nuevo Todo</h2>
+      <form id="todoForm">
+        <div class="form-group">
+          <label for="title">Título</label>
+          <input type="text" id="title" name="title" required placeholder="Ej: Aprender MongoDB">
+        </div>
+        <div class="form-group">
+          <label for="description">Descripción</label>
+          <textarea id="description" name="description" placeholder="Describe tu tarea..."></textarea>
+        </div>
+        <button type="submit" class="btn btn-primary">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor">
+            <path d="M19 13h-6v6h-2v-6H5v-2h6V5h2v6h6v2z"/>
+          </svg>
+          Agregar Todo
+        </button>
+      </form>
+    </div>
+
+    <div class="form-container">
+      <h2>Buscar por ID</h2>
+      <div style="display: flex; gap: 10px; align-items: flex-end;">
+        <div class="form-group" style="flex: 1; margin-bottom: 0;">
+          <label for="searchId">ID del Documento</label>
+          <input type="text" id="searchId" placeholder="69e9cfd797b33d38610e6f44">
+        </div>
+        <button onclick="searchById()" class="btn btn-secondary">Buscar</button>
+      </div>
+    </div>
+
+    <div id="todosContainer" class="todos-container">
+      <div class="loading">
+        <div class="spinner"></div>
+        <p>Cargando todos...</p>
+      </div>
+    </div>
+  </div>
+
+  <button class="refresh-btn" onclick="loadTodos()" title="Refrescar">
+    <svg viewBox="0 0 24 24" fill="currentColor">
+      <path d="M17.65 6.35A7.958 7.958 0 0012 4c-4.42 0-7.99 3.58-7.99 8s3.57 8 7.99 8c3.73 0 6.84-2.55 7.73-6h-2.08A5.99 5.99 0 0112 18c-3.31 0-6-2.69-6-6s2.69-6 6-6c1.66 0 3.14.69 4.22 1.78L13 11h7V4l-2.35 2.35z"/>
+    </svg>
+  </button>
+
+  <div id="notification" class="notification"></div>
+
+  <div class="modal-overlay" id="editModal">
+    <div class="modal">
+      <h2>Editar Todo</h2>
+      <form id="editForm">
+        <input type="hidden" id="editId">
+        <div class="form-group">
+          <label for="editTitle">Título</label>
+          <input type="text" id="editTitle" required>
+        </div>
+        <div class="form-group">
+          <label for="editDescription">Descripción</label>
+          <textarea id="editDescription"></textarea>
+        </div>
+        <div class="form-group">
+          <label>
+            <input type="checkbox" id="editDone"> Marcar como completado
+          </label>
+        </div>
+        <div class="modal-actions">
+          <button type="button" class="btn btn-secondary" onclick="closeModal()">Cancelar</button>
+          <button type="submit" class="btn btn-success">Guardar Cambios</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <script>
+    const API_URL = 'http://localhost:5000/todo';
+
+    // Cargar todos al iniciar
+    document.addEventListener('DOMContentLoaded', loadTodos);
+
+    // Manejar formulario de creación
+    document.getElementById('todoForm').addEventListener('submit', async (e) => {
+      e.preventDefault();
+
+      const title = document.getElementById('title').value;
+      const description = document.getElementById('description').value;
+
+      try {
+        const response = await fetch(API_URL, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ title, description })
+        });
+
+        if (response.ok) {
+          showNotification('Todo creado exitosamente!', 'success');
+          document.getElementById('todoForm').reset();
+          loadTodos();
+        } else {
+          showNotification('Error al crear el todo', 'error');
+        }
+      } catch (error) {
+        showNotification('Error de conexión: ' + error.message, 'error');
+      }
+    });
+
+    // Manejar formulario de edición
+    document.getElementById('editForm').addEventListener('submit', async (e) => {
+      e.preventDefault();
+
+      const id = document.getElementById('editId').value.trim();
+      const title = document.getElementById('editTitle').value;
+      const description = document.getElementById('editDescription').value;
+      const done = document.getElementById('editDone').checked;
+
+      console.log('Edit submit - ID:', id, '| Title:', title, '| Done:', done);
+
+      try {
+        const response = await fetch(`${API_URL}/${id}`, {
+          method: 'PUT',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ title, description, done })
+        });
+
+        if (response.ok) {
+          showNotification('Todo actualizado exitosamente!', 'success');
+          closeModal();
+          loadTodos();
+        } else {
+          showNotification('Error al actualizar el todo', 'error');
+        }
+      } catch (error) {
+        showNotification('Error de conexión: ' + error.message, 'error');
+      }
+    });
+
+    // Cargar todos los TODOs
+    async function loadTodos() {
+      const container = document.getElementById('todosContainer');
+      container.innerHTML = '<div class="loading"><div class="spinner"></div><p>Cargando todos...</p></div>';
+
+      try {
+        const response = await fetch(API_URL);
+        const data = await response.json();
+
+        if (data.length === 0) {
+          container.innerHTML = `
+            <div class="empty-state">
+              <svg viewBox="0 0 24 24" fill="currentColor">
+                <path d="M19 3H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm-2 10h-4v4h-2v-4H7v-2h4V7h2v4h4v2z"/>
+              </svg>
+              <p>No hay todos registrados</p>
+              <p>¡Crea uno nuevo arriba!</p>
+            </div>
+          `;
+          return;
+        }
+
+        container.innerHTML = data.map(todo => {
+          const todoId = String(todo._id).trim();
+          console.log('Todo ID:', todoId, '| Length:', todoId.length, '| Todo:', todo);
+          return `
+          <div class="todo-card ${todo.done ? 'done' : ''}" data-id="${todoId}" data-title="${escapeHtml(todo.title)}" data-description="${escapeHtml(todo.description || '')}" data-done="${todo.done}">
+            <div class="todo-header">
+              <div class="todo-title-wrapper">
+                <span class="todo-title">${escapeHtml(todo.title)}</span>
+                <span class="todo-id">${todoId}</span>
+              </div>
+            </div>
+            <p class="todo-description">${escapeHtml(todo.description || 'Sin descripción')}</p>
+            <div class="todo-meta">
+              <span class="todo-status ${todo.done ? 'status-done' : 'status-pending'}">
+                ${todo.done ? 'Completado' : 'Pendiente'}
+              </span>
+            </div>
+            <div class="todo-actions">
+              <button class="btn btn-small btn-success toggle-btn">
+                ${todo.done ? 'Desmarcar' : 'Completar'}
+              </button>
+              <button class="btn btn-small btn-secondary edit-btn">
+                Editar
+              </button>
+              <button class="btn btn-small btn-danger delete-btn">
+                Eliminar
+              </button>
+            </div>
+          </div>
+        `;
+        }).join('');
+
+        // Añadir event listeners a los botones
+        document.querySelectorAll('.todo-card').forEach(card => {
+          const id = card.dataset.id.trim();
+          const title = card.dataset.title;
+          const description = card.dataset.description;
+          const done = card.dataset.done === 'true';
+
+          card.querySelector('.toggle-btn').addEventListener('click', (e) => {
+            e.stopPropagation();
+            toggleDone(id, !done);
+          });
+          card.querySelector('.edit-btn').addEventListener('click', (e) => {
+            e.stopPropagation();
+            openEditModal(id, title, description, done);
+          });
+          card.querySelector('.delete-btn').addEventListener('click', (e) => {
+            e.stopPropagation();
+            deleteTodo(id);
+          });
+        });
+
+      } catch (error) {
+        container.innerHTML = `
+          <div class="empty-state">
+            <p>Error al cargar los todos</p>
+            <p>${error.message}</p>
+            <p style="margin-top: 10px; color: #00d9ff;">Asegúrate de que el servidor Flask esté corriendo en http://localhost:5000</p>
+          </div>
+        `;
+      }
+    }
+
+    // Buscar por ID
+    async function searchById() {
+      const id = document.getElementById('searchId').value.trim();
+
+      if (!id) {
+        showNotification('Por favor ingresa un ID', 'error');
+        return;
+      }
+
+      try {
+        const response = await fetch(`${API_URL}/${id}`);
+
+        if (response.ok) {
+          const todo = await response.json();
+          openEditModal(todo._id, todo.title, todo.description || '', todo.done);
+          showNotification('Todo encontrado!', 'success');
+        } else {
+          showNotification('Todo no encontrado con ese ID', 'error');
+        }
+      } catch (error) {
+        showNotification('Error de conexión: ' + error.message, 'error');
+      }
+    }
+
+    // Toggle done status
+    async function toggleDone(id, done) {
+      console.log('Toggle done - ID:', id, '| Done:', done);
+      try {
+        const response = await fetch(`${API_URL}/${id}`, {
+          method: 'PUT',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ done })
+        });
+
+        if (response.ok) {
+          showNotification(`Todo marcado como ${done ? 'completado' : 'pendiente'}`, 'success');
+          loadTodos();
+        } else {
+          showNotification('Error al actualizar', 'error');
+        }
+      } catch (error) {
+        showNotification('Error de conexión: ' + error.message, 'error');
+      }
+    }
+
+    // Eliminar todo
+    async function deleteTodo(id) {
+      console.log('Delete - ID:', id);
+      if (!confirm('¿Estás seguro de que quieres eliminar este todo?')) return;
+
+      try {
+        const response = await fetch(`${API_URL}/${id}`, {
+          method: 'DELETE'
+        });
+
+        if (response.ok) {
+          showNotification('Todo eliminado exitosamente!', 'success');
+          loadTodos();
+        } else {
+          showNotification('Error al eliminar el todo', 'error');
+        }
+      } catch (error) {
+        showNotification('Error de conexión: ' + error.message, 'error');
+      }
+    }
+
+    // Abrir modal de edición
+    function openEditModal(id, title, description, done) {
+      document.getElementById('editId').value = id;
+      document.getElementById('editTitle').value = title;
+      document.getElementById('editDescription').value = description;
+      document.getElementById('editDone').checked = done;
+      document.getElementById('editModal').classList.add('active');
+    }
+
+    // Cerrar modal
+    function closeModal() {
+      document.getElementById('editModal').classList.remove('active');
+    }
+
+    // Mostrar notificación
+    function showNotification(message, type) {
+      const notification = document.getElementById('notification');
+      notification.textContent = message;
+      notification.className = `notification ${type} show`;
+
+      setTimeout(() => {
+        notification.classList.remove('show');
+      }, 3000);
+    }
+
+    // Escapar HTML para prevenir XSS
+    function escapeHtml(text) {
+      const div = document.createElement('div');
+      div.textContent = text;
+      return div.innerHTML;
+    }
+
+    // Cerrar modal al hacer click fuera
+    document.getElementById('editModal').addEventListener('click', (e) => {
+      if (e.target.classList.contains('modal-overlay')) {
+        closeModal();
+      }
+    });
+  </script>
 </body>
 </html>

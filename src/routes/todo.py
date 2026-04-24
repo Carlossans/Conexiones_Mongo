@@ -4,7 +4,7 @@ from services.todo import create_todo_service, get_todos_service, get_todo_servi
 
 todo = Blueprint('todo', __name__)
 
-@todo.route('/', methods=['GET'])
+@todo.route('', methods=['GET'])
 def get_todos():
   return get_todos_service()
 
@@ -12,7 +12,7 @@ def get_todos():
 def get_todo(id):
   return get_todo_service(id)
 
-@todo.route('/', methods=['POST'])
+@todo.route('', methods=['POST'])
 def create_todo():
   return create_todo_service()
 

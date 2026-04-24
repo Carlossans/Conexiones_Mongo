@@ -1,4 +1,5 @@
 from flask import Flask, render_template
+from flask_cors import CORS
 from dotenv import load_dotenv
 import os
 
@@ -8,9 +9,10 @@ from routes.todo import todo
 config = load_dotenv()
 
 app = Flask(__name__)
-
+app.config['JSON_AS_ASCII'] = False
 app.config['MONGO_URI'] = os.getenv('MONGO_URI')
 
+CORS(app)
 mongo.init_app(app)
 
 @app.route('/')
@@ -21,3 +23,4 @@ app.register_blueprint(todo, url_prefix='/todo')
 
 if __name__ == '__main__':
   app.run(debug=True)
+

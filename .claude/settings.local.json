@@ -1,0 +1,19 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(dir /b /s C:\\\\Users\\\\Santos\\\\Documents\\\\conecction)",
+      "Bash(findstr /v \".venv\")",
+      "Bash(pip list *)",
+      "Bash(findstr -i \"flask pymongo bson dotenv\")",
+      "Bash(python app.py)",
+      "Bash(curl *)",
+      "Bash(start *)",
+      "Bash(python -c \"import requests; requests.get\\('http://localhost:5000/todo', timeout=2\\)\")",
+      "Bash(.\\\\.venv\\\\Scripts\\\\python.exe *)",
+      "Bash(python -c \"import requests; r = requests.get\\('http://localhost:5000/todo', timeout=5\\); print\\('Servidor corriendo:', r.status_code\\)\")",
+      "Bash(.venv/Scripts/python.exe *)",
+      "Bash(pip show *)",
+      "Bash(pip install *)"
+    ]
+  }
+}
